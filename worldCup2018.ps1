@@ -1,15 +1,20 @@
 ﻿$pots = @(@(),@(),@(),@())
 
 Import-csv wc2018pots.txt | % {
-    $name = $_.name
+    $displayname = $_.name
+    $r = $displayname -match "(.*) \(([\d]+)\)"
+    $name = $Matches[1]
+    $rank = $matches[2]
     $abbr = $_.abbr
     $conf = $_.conf
     $pot = $_.pot
 
     $country = New-Object -TypeName PSObject -property @{
+        DisplayName = $displayname
         Name = $name
         Abbr = $abbr
         Conf = $conf
+        Rank = $rank
         Available = $true
     }
 
@@ -159,5 +164,5 @@ foreach ($j in 0..7) {
 
 
 foreach ($i in 0..7) {
-    "Group $([char]($i+65)): $($groups[$i].name -join ',')"
+    "Group $([char]($i+65)): $($groups[$i].displayname -join ',')"
 }
