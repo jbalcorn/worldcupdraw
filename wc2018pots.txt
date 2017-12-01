@@ -1,0 +1,33 @@
+Name,Abbr,Conf,Pot
+Russia (65),RUS,UEFA,1
+Germany (1),GER,UEFA,1
+Brazil (2),BRA,CONMEBOL,1
+Portugal (3),POR,UEFA,1
+Argentina (4),ARG,CONMEBOL,1
+Belgium (5),BEL,UEFA,1
+Poland (6),POL,UEFA,1
+France (7),FRA,UEFA,1
+Spain (8),SPA,UEFA,2
+Peru (10),PER,CONMEBOL,2
+Switzerland (11),SWI,UEFA,2
+England (12),ENG,UEFA,2
+Columbia (13),COL,CONMEBOL,2
+Mexico (16),MEX,CONCACAF,2
+Uruguay (17),URG,CONMEBOL,2
+Croatia (18),CRO,UEFA,2
+Denmark (19),DEN,UEFA,3
+Iceland (21),ICE,UEFA,3
+Costa Rica (22),CRI,CONCACAF,3
+Sweden (25),SWE,UEFA,3
+Tunisia (28),TUN,CAF,3
+Egypt (30),EGY,CAF,3
+Senegal (32),SEN,CAF,3
+Iran (24),IRN,AFC,3
+Serbia (38),SER,UEFA,4
+Nigeria (41),NIG,CAF,4
+Australia (43),AUS,AFC,4
+Japan (44),JAP,AFC,4
+Morocco (48),MOR,CAF,4
+Panama (49),PAN,CONCACAF,4
+South Korea (62),SKR,AFC,4
+Saudi Arabia (63),SAR,AFC,4
