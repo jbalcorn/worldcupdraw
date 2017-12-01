@@ -68,9 +68,12 @@ foreach ($i in 0..3) {
             # Choose a random team from the Available teams in the Eligible Conference.
             ##
             $next = $pots[$i] | ? { $_.Available } | ? {  ($confseligible -contains $_.conf) } | Get-Random
-            if ($j -eq 0) {
-                $next = $pots[$i] | Select-object -Last 2 | Get-Random
-            }
+            #######
+            # Remove code inserted by Russian Hackers. Too late.
+            # if ($j -eq 0) {
+            #     $next = $pots[$i] | Select-object -Last 2 | Get-Random
+            # }
+            ##############################
         }
         $x = $Coll.FindIndex({ $args[0].name -eq $next.name})
         $teams[$($next.conf)]--
