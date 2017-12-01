@@ -1,3 +1,24 @@
+<# 
+   .Synopsis 
+    worldCup2018.ps1 - 2018 World Cup Draw Simulator  
+   .Example 
+    worldcup2018.ps1
+    
+    This will read the list of pots and simulate a possible World Cup draw
+   .Example
+    worldCup2018.ps1 -postdraw
+
+    This will just print the groups as they were drawn on Dec 1, 2017, if you have the Group column on the input file.
+   .Notes 
+    NAME: worldCup2018.ps1
+    AUTHOR: Justin B. Alcorn
+    LASTEDIT: 12/01/2017 17:49:35 
+    KEYWORDS: #WorldCupDraw
+#> 
+Param(
+    [switch]$postdraw
+)
+
 $rules = @{
     "UEFA" = @{"max" = 2};
     "CONMEBOL" = @{"max" = 1};
@@ -7,6 +28,11 @@ $rules = @{
 }
 
 $pots = @(@(),@(),@(),@())
+if ($postdraw) {
+    $groups = @()
+    0..7 | % { $groups += ,($null,$null,$null,$null) }
+}
+
 
 Import-csv wc2018pots.txt | % {
     $name = $_.name
@@ -27,8 +53,12 @@ Import-csv wc2018pots.txt | % {
     }
 
     $pots[$pot-1] += $country
+    if ($postdraw) {
+        $groups[[byte][char]$group-65][$pot-1] = $country
+    }
 }
 
+if (-Not $postdraw) {
 $groups = @(@(),@(),@(),@(),@(),@(),@(),@())
 foreach ($i in 0..3) {
     $Coll = [Collections.Generic.List[Object]]($pots[$i])
@@ -68,12 +98,11 @@ foreach ($i in 0..3) {
             # Choose a random team from the Available teams in the Eligible Conference.
             ##
             $next = $pots[$i] | ? { $_.Available } | ? {  ($confseligible -contains $_.conf) } | Get-Random
-            #######
-            # Remove code inserted by Russian Hackers. Too late.
-            # if ($j -eq 0) {
-            #     $next = $pots[$i] | Select-object -Last 2 | Get-Random
-            # }
-            ##############################
+            ####
+            # Code inserted by Russian Hackers. Removed too late.
+            #   if ($j -eq 0) {
+            #      $next = $pots[$i] | Select-object -Last 2 | Get-Random
+            #    }
         }
         $x = $Coll.FindIndex({ $args[0].name -eq $next.name})
         $teams[$($next.conf)]--
@@ -84,6 +113,7 @@ foreach ($i in 0..3) {
         $pots[$i][$x].Available = $false
         Write-Verbose "$j $($next.name) $($next.conf)"
     }
+}
 }
 
 foreach ($i in 0..7) {
