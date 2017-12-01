@@ -1,4 +1,12 @@
-﻿$pots = @(@(),@(),@(),@())
+$rules = @{
+    "UEFA" = @{"max" = 2};
+    "CONMEBOL" = @{"max" = 1};
+    "CONCACAF" = @{"max" = 1};
+    "CAF" = @{"max" = 1};
+    "AFC" = @{"max" = 1}  
+}
+
+$pots = @(@(),@(),@(),@())
 
 Import-csv wc2018pots.txt | % {
     $name = $_.name
@@ -7,6 +15,7 @@ Import-csv wc2018pots.txt | % {
     $abbr = $_.abbr
     $conf = $_.conf
     $pot = $_.pot
+    $group = $_.group
 
     $country = New-Object -TypeName PSObject -property @{
         DisplayName = $displayname
@@ -21,146 +30,58 @@ Import-csv wc2018pots.txt | % {
 }
 
 $groups = @(@(),@(),@(),@(),@(),@(),@(),@())
-
-
-# POT1. Cannot have a conflict. Russia goes in group A
-$i = 0
-foreach ($j in 0..7) {
-    if ($j -eq 0) {
-        $next = $pots[$i] | ? { $_.name -match "Russia" }
-        $x = 0
-    } else {
-        $next = $pots[$i] | ? { $_.Available } | Get-Random
-        $Coll = [Collections.Generic.List[Object]]($pots[$i])
-        $x = $Coll.FindIndex({ $args[0].name -eq $next.name})
-    }
-    $groups[$j] += $next
-    $pots[$i][$x].Available = $false
-    Write-Verbose "$j $($next.name) $($next.conf)"
-}
-
-# POT2 - CONMEBOL could cause a conflict. Do those groups first.
-$i = 1
-$Coll = [Collections.Generic.List[Object]]($pots[$i])
-foreach ($j in 0..7) {
-    if ($groups[$j].conf -contains "CONMEBOL") {
-        $found = $false
-        do { 
-            $next = $pots[$i] | ? { $_.Available } | Get-Random
-            $x = $Coll.FindIndex({ $args[0].name -eq $next.name})
-            $c = ($groups[$j].conf | ? { $_ -eq $next.conf } ).count
-            if ($c -lt 1) {
-                $groups[$j] += $next
-                $pots[$i][$x].Available = $false
-                Write-Verbose "$j $($next.name) $($next.conf)"
-                $found = $true
-            } else {
-                Write-Verbose "Rejecting $($next.name) in group $j"
+foreach ($i in 0..3) {
+    $Coll = [Collections.Generic.List[Object]]($pots[$i])
+    $groupsopen = @(@(),@(),@(),@(),@(),@(),@(),@())
+    $slots = @{}
+    foreach ($conf in $rules.keys) {
+        foreach ($x in 0..7) {
+            if (@(($groups[$x] | ? { $_.conf -eq $conf })).count -lt ($rules[$conf]).max) {
+                $groupsopen[$x] += $conf
+                $slots[$conf]++
             }
-        } until ($found)
-    }
-}
-
-# Still POT2 - now the UEFA ones
-# No chance of a conflict, we can have up to 2 UEFA and we've already done CONMEBOL        
-foreach ($j in 0..7) {
-    if ($groups[$j].count -eq 1) {
-        $next = $pots[$i] | ? { $_.Available } | Get-Random
-        $x = $Coll.FindIndex({ $args[0].name -eq $next.name})
-        $groups[$j] += $next
-        $pots[$i][$x].Available = $false
-        Write-Verbose "$j $($next.name) $($next.conf)"
-    }
-}
-
-# POT3 - Place any with UEFAx2 and Mexico first. No CONMEBOL in pot3 so no chance of conflict.
-
-$i = 2
-$Coll = [Collections.Generic.List[Object]]($pots[$i])
-foreach ($j in 0..7) {
-    if ( ($groups[$j].conf | ? {$_ -eq "UEFA" }).count -eq 2 -or ($groups[$j].conf | ? {$_ -eq "CONCACAF" }).count -eq 1 ) {
-        $found = $false
-        do { 
-            $next = $pots[$i] | ? { $_.Available } | Get-Random
-            $x = $Coll.FindIndex({ $args[0].name -eq $next.name})
-            if ($next.conf -eq "UEFA") {
-                $max = 2
-            } else {
-                $max = 1
-            }
-            $c = ($groups[$j].conf | ? { $_ -eq $next.conf } ).count
-            if ($c -lt $max) {
-                $groups[$j] += $next
-                $pots[$i][$x].Available = $false
-                Write-Verbose "$j $($next.name) $($next.conf)"
-                $found = $true
-            } else {
-                Write-Verbose "Rejecting $($next.name) in group $j"
-            }
-        } until ($found)
-    }
-}
-
-# Rest of POT 3 - No conflict chances
-foreach ($j in 0..7) {
-    if ($groups[$j].count -eq 2) {
-        $next = $pots[$i] | ? { $_.Available } | Get-Random
-        $x = $Coll.FindIndex({ $args[0].name -eq $next.name})
-        $groups[$j] += $next
-        $pots[$i][$x].Available = $false
-        Write-Verbose "$j $($next.name) $($next.conf)"
-    }
-}
-
-# POT4 - Keep track of number of slots available for each confederation and if we get down to a last slot for a confederation, put that one there.
-$i = 3
-$Coll = [Collections.Generic.List[Object]]($pots[$i])
-$groupsopen = @(@(),@(),@(),@(),@(),@(),@(),@())
-$count = 0
-foreach ($x in 0..7) {
-    if (($groups[$x] | ? { $_.conf -eq "UEFA" }).count -lt 2) {
-        $groupsopen[$x] += "UEFA"
-        $count++
-    }
-}
-foreach ($x in 0..7) {
-    if (-Not ($groups[$x] | ? { $_.conf -eq "AFC" })) {
-        $groupsopen[$x] += "AFC"
-    }
-}
-foreach ($x in 0..7) {
-    if (-Not ($groups[$x] | ? { $_.conf -eq "CAF" })) {
-        $groupsopen[$x] += "CAF"
-    }
-}
-foreach ($x in 0..7) {
-    if (-Not ($groups[$x] | ? { $_.conf -eq "CONCACAF" })) {
-        $groupsopen[$x] += "CONCACAF"
-    }
-}
-
-$slots = @{ "AFC" = 7; "CAF" = 5; "CONCACAF" = 6; "UEFA" = $count }
-$teams = @{ "AFC" = 4; "CAF" = 2; "CONCACAF" = 1; "UEFA" = 1 }
-foreach ($j in 0..7) {
-    # First find out if we have a team that MUST be placed
-    $confseligible = $groupsopen[$j]
-    foreach ($conf in $groupsopen[$j]) {
-        if ($teams[$conf] -eq $slots[$conf]) {
-            Write-Verbose "Must choose $conf team for group $j"
-            $confseligible =  $conf
         }
     }
-    $next = $pots[$i] | ? { $_.Available } | ? {  ($confseligible -contains $_.conf) } | Get-Random
-    $x = $Coll.FindIndex({ $args[0].name -eq $next.name})
-    $teams[$($next.conf)]--
-    foreach ($conf in $groupsopen[$j]) {
-        $slots[$conf]--
-    } 
-    $groups[$j] += $next
-    $pots[$i][$x].Available = $false
-    Write-Verbose "$j $($next.name) $($next.conf)"
+    $teams = @{}
+    foreach ($team in $pots[$i]) {
+        $teams[$($team.conf)]++
+    }
+    foreach ($j in 0..7) {
+        ####
+        # Choose the next team to place
+        # Host country goes in Pot 1 Group A
+        if ($i -eq 0 -and $j -eq 0) {
+            $next = $pots[$i] | ? { $_.name -match "Russia" }
+        } else {
+            #
+            # Find out if we have a team that MUST be placed because of rules
+            #  Note that Group 7 will always hit this code, which is fine, because there is only one Available team anyway
+            #
+            $confseligible = $groupsopen[$j]
+            foreach ($conf in $groupsopen[$j]) {
+                if ($teams[$conf] -eq $slots[$conf]) {
+                    Write-Verbose "Must choose $conf team for group $j"
+                    $confseligible =  $conf
+                }
+            }
+            ##
+            # Choose a random team from the Available teams in the Eligible Conference.
+            ##
+            $next = $pots[$i] | ? { $_.Available } | ? {  ($confseligible -contains $_.conf) } | Get-Random
+            if ($j -eq 0) {
+                $next = $pots[$i] | Select-object -Last 2 | Get-Random
+            }
+        }
+        $x = $Coll.FindIndex({ $args[0].name -eq $next.name})
+        $teams[$($next.conf)]--
+        foreach ($conf in $groupsopen[$j]) {
+            $slots[$conf]--
+        } 
+        $groups[$j] += $next
+        $pots[$i][$x].Available = $false
+        Write-Verbose "$j $($next.name) $($next.conf)"
+    }
 }
-
 
 foreach ($i in 0..7) {
     "Group $([char]($i+65)): $($groups[$i].displayname -join ',')"
