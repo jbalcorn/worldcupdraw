@@ -1,10 +1,9 @@
 ﻿$pots = @(@(),@(),@(),@())
 
 Import-csv wc2018pots.txt | % {
-    $displayname = $_.name
-    $r = $displayname -match "(.*) \(([\d]+)\)"
-    $name = $Matches[1]
-    $rank = $matches[2]
+    $name = $_.name
+    $rank = $_.rank
+    $displayname = "$($_.name) ($($rank))"
     $abbr = $_.abbr
     $conf = $_.conf
     $pot = $_.pot
